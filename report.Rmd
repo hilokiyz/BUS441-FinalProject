@@ -1,0 +1,310 @@
+---
+title: "Project"
+author: "Avjot Buttar"
+date: "2024-04-05"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(dplyr)
+
+
+air <- read.csv("C:/Users/Manreet/Downloads/listings-complete.csv")
+
+# Convert character columns to factors in the dataset
+air <- air %>% mutate_if(is.character, as.factor) 
+
+# Extract numbers from "bathrooms_text" and convert to numeric
+air$bathrooms <- as.numeric(gsub("[^0-9.]+", "", air$bathrooms_text))
+
+
+
+selected_variables <- c(
+  "host_is_superhost", "host_response_time", "host_response_rate", 
+  "host_acceptance_rate", "accommodates", 
+  "bathrooms", "bedrooms", "price", "neighbourhood_cleansed", 
+  "host_listings_count", "minimum_nights", "maximum_nights", 
+  "instant_bookable", "host_identity_verified", "availability_30", 
+  "availability_60", "availability_90","review_scores_rating","reviews_per_month", "has_availability","availability_365","number_of_reviews"
+)
+
+air_new <- air[selected_variables]
+
+
+# Remove rows with NA values from air_subset
+air_clean <- na.omit(air_new)
+
+
+# Check which rows have complete data (no NA values) in air_subset
+complete_rows <- complete.cases(air_new)
+
+# Create a new subset without NA values
+air_clean <- air_new[complete_rows, ]
+
+str(air_clean)
+
+# Convert "price" column to numeric
+air_clean$price <- as.numeric(gsub("[$,]", "", air_clean$price))
+
+# Convert "host_acceptance_rate" column to numeric
+air_clean$host_acceptance_rate <- as.numeric(gsub("%", "", air_clean$host_acceptance_rate)) / 100
+
+# Convert "host_response_rate" column to numeric
+air_clean$host_response_rate <- as.numeric(gsub("%", "", air_clean$host_response_rate)) / 100
+
+
+
+str(air_clean)
+
+summary(air_clean)
+
+bathrooms_count <- table(air_clean$bathrooms)
+
+
+```
+
+
+```{r}
+
+# Calculate correlation matrix
+correlation_matrix <- model.matrix(~0 + ., air_clean) %>%
+  cor(use = "pairwise.complete.obs")
+
+# Identify correlations with the "y" variable
+review_correlations <- correlation_matrix["price",]
+
+# Sort correlations in descending order to identify predictors
+sorted_correlations <- sort(review_correlations, decreasing = TRUE)
+
+# Convert sorted correlations to a data frame
+correlation_df <- data.frame(Predictor_Variable = names(sorted_correlations), Correlation_with_y = sorted_correlations)
+
+options(scipen = 999)
+# Print the sorted correlations table
+print(correlation_df)
+
+```
+
+
+
+
+
+```{r}
+#kitchen sink (all variables)
+
+
+
+# Load the required library for linear regression
+library(stats)
+
+
+# Define the linear regression model using selected variables
+model <- lm(price ~ host_is_superhost + host_response_time + host_response_rate + host_acceptance_rate +
+               accommodates + bathrooms + bedrooms + neighbourhood_cleansed + host_listings_count + 
+               minimum_nights + maximum_nights + instant_bookable + host_identity_verified + 
+               availability_30 + availability_60 + availability_90 + review_scores_rating + reviews_per_month + has_availability, 
+            data = air_clean)
+
+# Print the summary of the model to check coefficients and other statistics
+summary(model)
+
+# Remove rows with missing values
+air_clean <- na.omit(air_clean)
+
+
+# Perform stepwise selection
+step_model <- step(model)
+
+# Summary of the model with stepwise selection
+summary(step_model)
+
+
+```
+
+
+```{r}
+significant_neighborhoods <- c("Downtown", "Downtown Eastside","Kitsalano", "Hastings-Sunrise","Kerrisdale",
+                                "Marpole", "Mount Pleasant", "Oakridge", "Renfrew-Collingwood",
+                                "Sunset", "Victoria-Fraserview", "West End")
+
+# Filter the dataset to include only significant neighbourhoods
+air_clean_sig <- subset(air_clean, 
+                                   neighbourhood_cleansed %in% significant_neighborhoods)
+
+# Fit the linear regression model with significant neighbourhoods
+lm_model_significant_neighborhoods <- lm( price ~ host_is_superhost + accommodates + bathrooms + 
+    bedrooms + neighbourhood_cleansed + minimum_nights + host_identity_verified + 
+    availability_30 + review_scores_rating + reviews_per_month, 
+                                       data = air_clean_sig)
+
+# Get the summary of the model with significant neighbourhoods
+summary(lm_model_significant_neighborhoods)
+
+step_model2 <- step(lm_model_significant_neighborhoods)
+
+# Summary of the model with stepwise selection
+summary(step_model2)
+
+```
+
+
+```{r}
+# Function to detect outliers using IQR and remove them
+#Removing outliers
+remove_outliers <- function(data, variable) {
+  q1 <- quantile(data[[variable]], 0.25)
+  q3 <- quantile(data[[variable]], 0.75)
+  iqr <- q3 - q1
+  lower_bound <- q1 - 1.5 * iqr
+  upper_bound <- q3 + 4.5 * iqr
+  
+  # Remove outliers from the data frame
+  filtered_data <- data[!(data[[variable]] < lower_bound | data[[variable]] > upper_bound), ]
+  return(filtered_data)
+}
+
+# Remove outliers from the 'price' variable in air_clean
+air_clean_filtered <- remove_outliers(air_clean, 'price')
+```
+
+
+
+
+
+```{r}
+# Fit the model with the filtered data
+updated_model <- lm(price ~ host_is_superhost + host_response_time + 
+                      host_response_rate + host_acceptance_rate + 
+                      accommodates + bathrooms + bedrooms + 
+                      neighbourhood_cleansed + host_listings_count + 
+                      minimum_nights + maximum_nights + instant_bookable + 
+                      host_identity_verified + availability_30 + 
+                      availability_60 + availability_90 + 
+                      review_scores_rating + reviews_per_month,
+                    data = air_clean_filtered)
+
+# Summary of the updated model
+summary(updated_model)
+
+step_model3 <- step(updated_model)
+
+# Summary of the model with stepwise selection
+summary(step_model3)
+```
+
+
+```{r}
+# Filter the dataset to include only significant neighbourhoods with filtered data
+air_clean_sig2 <- subset(air_clean_filtered, 
+                                   neighbourhood_cleansed %in% significant_neighborhoods)
+
+# Fit the linear regression model with significant neighbourhoods
+lm_model_significant_neighborhoods2 <- lm(price ~ host_is_superhost + host_response_time + 
+                      host_response_rate + host_acceptance_rate + 
+                      accommodates + bathrooms + bedrooms + 
+                      neighbourhood_cleansed + host_listings_count + 
+                      minimum_nights + maximum_nights + instant_bookable + 
+                      host_identity_verified + availability_30 + 
+                      availability_60 + availability_90 + 
+                      review_scores_rating + reviews_per_month, 
+                                       data = air_clean_sig2)
+
+# Get the summary of the model with significant neighbourhoods
+summary(lm_model_significant_neighborhoods2)
+
+step_model4 <- step(lm_model_significant_neighborhoods2)
+
+# Summary of the model with stepwise selection
+summary(step_model4)
+
+
+```
+
+
+
+```{r}
+log_model <- glm(price ~ ., data = air_clean)
+summary(log_model)
+
+step_model5 <- step(log_model)
+
+# Summary of the model with stepwise selection
+summary(step_model5)
+
+```
+
+
+```{r}
+log_model2 <- glm(price ~ ., data = air_clean_sig2)
+summary(log_model2)
+
+step_model6 <- step(log_model2)
+
+# Summary of the model with stepwise selection
+summary(step_model6)
+```
+
+
+
+```{r}
+library(rpart)
+library(caret)
+library(rpart.plot)
+library(e1071)
+
+# Set the seed for reproducibility
+set.seed(123)
+
+# Randomize the order of the data
+air_clean_sig2 <- air_clean_sig2[sample(nrow(air_clean_sig2)), ]
+
+# Split the data into training (70%) and testing (30%) sets
+train_index <- createDataPartition(air_clean_sig2$price, p = 0.7, list = FALSE)
+train_data <- air_clean_sig2[train_index, ]
+test_data <- air_clean_sig2[-train_index, ]
+
+# Fit the decision tree model using the training data
+tree_model <- rpart(price ~ host_is_superhost + accommodates + bathrooms + 
+                     bedrooms + neighbourhood_cleansed + minimum_nights + 
+                     host_identity_verified + availability_30 + review_scores_rating + 
+                     reviews_per_month, data = train_data)
+
+# Visualize the decision tree
+rpart.plot(tree_model)
+
+# Make predictions on the test data
+predicted_prices <- predict(tree_model, test_data)
+
+# Calculate the Mean Absolute Error (MAE)
+mae <- mean(abs(predicted_prices - test_data$price))
+
+# Print the MAE
+print(paste("Mean Absolute Error (MAE):", mae))
+
+
+```
+
+```{r testing}
+
+#shuffle the data - randomize rows to prep for splitting into test and train parts
+shuffle_air <- sample(1:nrow(air_new)) # generates random row #s in a vector
+air_new_shuffled <- air_new[shuffle_air, ] # use the randomly generated rows to shuffle dt
+
+#create test and train data
+n_cut <- round(nrow(air_new)*.8,0) 
+air_train <- air_new[1:n_cut,]
+air_test <- air_new[(n_cut+1):nrow(air_new),]
+
+```
+
+```{r predict}
+#Prediction Model
+#Model 1
+fit <- rpart(y~housing+loan+balance+default+education+age+poutcome+pdays, data = bank_train, method = 'class') 
+
+#plotting the trees
+rpart.plot(fit, type = 4, extra=106) # tree plotting`
+
+
+```

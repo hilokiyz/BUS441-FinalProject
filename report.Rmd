@@ -22,15 +22,11 @@ air <- read.csv("listings-complete.csv")
 library(tidyverse)
 library(dplyr)
 
-
-air <- read.csv("C:/Users/Manreet/Downloads/listings-complete.csv")
-
 # Convert character columns to factors in the dataset
 air <- air %>% mutate_if(is.character, as.factor) 
 
 # Extract numbers from "bathrooms_text" and convert to numeric
 air$bathrooms <- as.numeric(gsub("[^0-9.]+", "", air$bathrooms_text))
-
 
 
 selected_variables <- c(
@@ -74,6 +70,14 @@ summary(air_clean)
 
 bathrooms_count <- table(air_clean$bathrooms)
 
+```
+
+```{r simple histograms and current statistics, fig.height=11, fig.width=10}
+library(ggplot2)
+
+
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
 
 ```
 

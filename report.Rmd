@@ -72,17 +72,24 @@ bathrooms_count <- table(air_clean$bathrooms)
 
 ```
 
-```{r simple histograms and current statistics, fig.height=11, fig.width=10}
+```{r simple histograms and current statistics, fig.height=6, fig.width=10}
 library(ggplot2)
-
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bedrooms)
 print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
 
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bathrooms)
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates"))
+
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$bathrooms)) + geom_point()
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
 
-```{r}
+```{r correlation}
 
 # Calculate correlation matrix
 correlation_matrix <- model.matrix(~0 + ., air_clean) %>%
@@ -103,11 +110,15 @@ print(correlation_df)
 
 ```
 
+```{r correlation graph}
+#built in heatmap
+heatmap(correlation_matrix, Colv = NA, Rowv = NA, scale = "none")
 
+#ggplot2 heatmap
 
+```
 
-
-```{r}
+```{r air_clean, step_model}
 #kitchen sink (all variables)
 
 
@@ -139,8 +150,21 @@ summary(step_model)
 
 ```
 
+```{r simple histograms and current statistics air_clean, fig.height=6, fig.width=10}
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
 
-```{r}
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bathrooms) + geom_boxplot(aes(group = air_clean$accommodates))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$bathrooms)) + geom_boxplot(aes(group = air_clean$bathrooms))
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+
+p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+```
+
+```{r air_clean_sig step_model2}
 significant_neighborhoods <- c("Downtown", "Downtown Eastside","Kitsalano", "Hastings-Sunrise","Kerrisdale",
                                 "Marpole", "Mount Pleasant", "Oakridge", "Renfrew-Collingwood",
                                 "Sunset", "Victoria-Fraserview", "West End")
@@ -165,8 +189,21 @@ summary(step_model2)
 
 ```
 
+```{r simple histograms and current statistics air_clean_sig, fig.height=6, fig.width=10}
+p = ggplot(air_clean_sig, aes(y = air_clean_sig$price, x = air_clean_sig$accommodates)) + geom_point() + facet_wrap(~air_clean_sig$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
 
-```{r}
+p = ggplot(air_clean_sig, aes(y = air_clean_sig$price, x = air_clean_sig$accommodates)) + geom_point() + facet_wrap(~air_clean_sig$bathrooms) + geom_boxplot(aes(group = air_clean_sig$accommodates))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+
+p = ggplot(air_clean_sig, aes(y = air_clean_sig$price, x = air_clean_sig$bathrooms)) + geom_boxplot(aes(group = air_clean_sig$bathrooms))
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+
+p = ggplot(air_clean_sig, aes(y = air_clean_sig$price, x = air_clean_sig$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+```
+
+```{r air_clean_filtered}
 # Function to detect outliers using IQR and remove them
 #Removing outliers
 remove_outliers <- function(data, variable) {
@@ -185,11 +222,21 @@ remove_outliers <- function(data, variable) {
 air_clean_filtered <- remove_outliers(air_clean, 'price')
 ```
 
+```{r simple histograms and current statistics air_clean_filtered, fig.height=6, fig.width=10}
+p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
 
+p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bathrooms) + geom_boxplot(aes(group = air_clean_filtered$accommodates))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
 
+p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$bathrooms)) + geom_boxplot(aes(group = air_clean_filtered$bathrooms))
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
 
+p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+```
 
-```{r}
+```{r step_model3}
 # Fit the model with the filtered data
 updated_model <- lm(price ~ host_is_superhost + host_response_time + 
                       host_response_rate + host_acceptance_rate + 
@@ -211,7 +258,7 @@ summary(step_model3)
 ```
 
 
-```{r}
+```{r air_clean_sig2 step_model4}
 # Filter the dataset to include only significant neighbourhoods with filtered data
 air_clean_sig2 <- subset(air_clean_filtered, 
                                    neighbourhood_cleansed %in% significant_neighborhoods)
@@ -234,13 +281,11 @@ step_model4 <- step(lm_model_significant_neighborhoods2)
 
 # Summary of the model with stepwise selection
 summary(step_model4)
-
-
 ```
 
 
 
-```{r}
+```{r step_model5}
 log_model <- glm(price ~ ., data = air_clean)
 summary(log_model)
 
@@ -252,7 +297,7 @@ summary(step_model5)
 ```
 
 
-```{r}
+```{r step_model6}
 log_model2 <- glm(price ~ ., data = air_clean_sig2)
 summary(log_model2)
 
@@ -262,6 +307,19 @@ step_model6 <- step(log_model2)
 summary(step_model6)
 ```
 
+```{r simple histograms and current statistics air_clean_sig2, fig.height=6, fig.width=10}
+p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$accommodates)) + geom_point() + facet_wrap(~air_clean_sig2$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+
+p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$accommodates)) + geom_point() + facet_wrap(~air_clean_sig2$bathrooms) + geom_boxplot(aes(group = air_clean_sig2$accommodates))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+
+p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$bathrooms)) + geom_boxplot(aes(group = air_clean_sig2$bathrooms)) + geom_smooth()
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+
+p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+```
 
 
 ```{r}

@@ -5,6 +5,19 @@ date: "2024-04-05"
 output: html_document
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+cat("\014")  # Clear Console
+rm(list = ls(all.names = TRUE))# clear all
+gc()
+```
+
+```{r get dataset}
+air <- read.csv("listings-complete.csv")
+```
+
+
 ```{r}
 library(tidyverse)
 library(dplyr)

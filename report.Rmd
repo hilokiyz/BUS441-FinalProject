@@ -110,11 +110,26 @@ print(correlation_df)
 
 ```
 
-```{r correlation graph}
+```{r correlation graph, fig.height=6, fig.width=10}
 #built in heatmap
 heatmap(correlation_matrix, Colv = NA, Rowv = NA, scale = "none")
 
+# Get lower triangle of the correlation matrix
+lower_tri_cor<-function(cormat){
+  cormat[lower.tri(cormat)] <- NA
+  return(cormat)
+}
+
+heatmap(lower_tri_cor(correlation_matrix), Colv = NA, Rowv = NA, scale = "none")
+
 #ggplot2 heatmap
+library(reshape2)
+melted_cor <- melt(correlation_matrix)
+
+ggplot(data = melted_cor, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_raster()
+
+
 
 ```
 

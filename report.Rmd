@@ -5,7 +5,6 @@ date: "2024-04-05"
 output: html_document
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 cat("\014")  # Clear Console
@@ -17,18 +16,18 @@ gc()
 air <- read.csv("listings-complete.csv")
 ```
 
-
-```{r}
+```{r air_clean}
 library(tidyverse)
 library(dplyr)
 
+colnames(air)
 # Convert character columns to factors in the dataset
 air <- air %>% mutate_if(is.character, as.factor) 
 
 # Extract numbers from "bathrooms_text" and convert to numeric
 air$bathrooms <- as.numeric(gsub("[^0-9.]+", "", air$bathrooms_text))
 
-
+# Define the selected variables for analysis
 selected_variables <- c(
   "host_is_superhost", "host_response_time", "host_response_rate", 
   "host_acceptance_rate", "accommodates", 
@@ -38,36 +37,30 @@ selected_variables <- c(
   "availability_60", "availability_90","review_scores_rating","reviews_per_month", "has_availability","availability_365","number_of_reviews"
 )
 
+# Create a new dataframe with only the selected variables
 air_new <- air[selected_variables]
 
-
-# Remove rows with NA values from air_subset
+# Remove rows with NA values from air_new
 air_clean <- na.omit(air_new)
 
 
-# Check which rows have complete data (no NA values) in air_subset
-complete_rows <- complete.cases(air_new)
-
-# Create a new subset without NA values
-air_clean <- air_new[complete_rows, ]
-
+# Check the structure of air_clean
 str(air_clean)
 
 # Convert "price" column to numeric
 air_clean$price <- as.numeric(gsub("[$,]", "", air_clean$price))
 
-# Convert "host_acceptance_rate" column to numeric
+# Convert "host_acceptance_rate" and "host_response_rate" columns to numeric
 air_clean$host_acceptance_rate <- as.numeric(gsub("%", "", air_clean$host_acceptance_rate)) / 100
-
-# Convert "host_response_rate" column to numeric
 air_clean$host_response_rate <- as.numeric(gsub("%", "", air_clean$host_response_rate)) / 100
 
-
-
+# Check the structure of air_clean again
 str(air_clean)
 
+# Summarize the cleaned dataset
 summary(air_clean)
 
+# Calculate the count of bathrooms
 bathrooms_count <- table(air_clean$bathrooms)
 
 ```
@@ -88,14 +81,14 @@ p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$number_of_reviews))
 print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
-
-```{r correlation}
-
+```{r correlations}
 # Calculate correlation matrix
 correlation_matrix <- model.matrix(~0 + ., air_clean) %>%
   cor(use = "pairwise.complete.obs")
 
-# Identify correlations with the "y" variable
+print(correlation_matrix)
+
+# Identify correlations with the "y" variable (price)
 review_correlations <- correlation_matrix["price",]
 
 # Sort correlations in descending order to identify predictors
@@ -130,11 +123,9 @@ heatmap <- plot_ly(x=colnames(correlation_matrix), y=rownames(correlation_matrix
 heatmap
 ```
 
-```{r air_clean, step_model}
-#kitchen sink (all variables)
+This is the kitchen sink model of OLS. This includes all of variables without any data transformations.
 
-
-
+```{r air_clean step_model}
 # Load the required library for linear regression
 library(stats)
 
@@ -159,7 +150,6 @@ step_model <- step(model)
 # Summary of the model with stepwise selection
 summary(step_model)
 
-
 ```
 
 ```{r simple histograms and current statistics air_clean, fig.height=6, fig.width=10}
@@ -176,28 +166,31 @@ p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$number_of_reviews))
 print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
+In this chunk of code I got rid of non-signficant neighbourhoods.
+
 ```{r air_clean_sig step_model2}
-significant_neighborhoods <- c("Downtown", "Downtown Eastside","Kitsalano", "Hastings-Sunrise","Kerrisdale",
-                                "Marpole", "Mount Pleasant", "Oakridge", "Renfrew-Collingwood",
-                                "Sunset", "Victoria-Fraserview", "West End")
+# Create a vector of significant neighbourhoods
+significant_neighborhoods <- c("Downtown", "Downtown Eastside","Kitsilano", "Hastings-Sunrise","Kerrisdale", "Killarney","Marpole", "Mount Pleasant", "Oakridge", "Renfrew-Collingwood","Sunset", "Victoria-Fraserview", "West End")
 
 # Filter the dataset to include only significant neighbourhoods
-air_clean_sig <- subset(air_clean, 
-                                   neighbourhood_cleansed %in% significant_neighborhoods)
+air_clean_sig <- air_clean %>%
+  filter(neighbourhood_cleansed %in% significant_neighborhoods)
 
-# Fit the linear regression model with significant neighbourhoods
-lm_model_significant_neighborhoods <- lm( price ~ host_is_superhost + accommodates + bathrooms + 
-    bedrooms + neighbourhood_cleansed + minimum_nights + host_identity_verified + 
-    availability_30 + review_scores_rating + reviews_per_month, 
+# Fit a linear regression model with significant neighbourhoods
+lm_model_significant_neighborhoods <- lm(price ~ host_is_superhost + host_response_time + host_response_rate + host_acceptance_rate +
+               accommodates + bathrooms + bedrooms + neighbourhood_cleansed + host_listings_count + 
+               minimum_nights + maximum_nights + instant_bookable + host_identity_verified + 
+               availability_30 + availability_60 + availability_90 + review_scores_rating + reviews_per_month + has_availability, 
                                        data = air_clean_sig)
 
-# Get the summary of the model with significant neighbourhoods
-summary(lm_model_significant_neighborhoods)
 
+
+# Perform stepwise selection on the model
 step_model2 <- step(lm_model_significant_neighborhoods)
 
 # Summary of the model with stepwise selection
 summary(step_model2)
+
 
 ```
 
@@ -215,9 +208,10 @@ p = ggplot(air_clean_sig, aes(y = air_clean_sig$price, x = air_clean_sig$number_
 print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
+In this code I transformed the data so that it removed extreme outliers form the data
+
 ```{r air_clean_filtered}
 # Function to detect outliers using IQR and remove them
-#Removing outliers
 remove_outliers <- function(data, variable) {
   q1 <- quantile(data[[variable]], 0.25)
   q3 <- quantile(data[[variable]], 0.75)
@@ -232,6 +226,7 @@ remove_outliers <- function(data, variable) {
 
 # Remove outliers from the 'price' variable in air_clean
 air_clean_filtered <- remove_outliers(air_clean, 'price')
+
 ```
 
 ```{r simple histograms and current statistics air_clean_filtered, fig.height=6, fig.width=10}
@@ -248,8 +243,10 @@ p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_f
 print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
+This model has the data without outliers and with all neighbourhoods.
+
 ```{r step_model3}
-# Fit the model with the filtered data
+# Fit a linear regression model with filtered data
 updated_model <- lm(price ~ host_is_superhost + host_response_time + 
                       host_response_rate + host_acceptance_rate + 
                       accommodates + bathrooms + bedrooms + 
@@ -263,19 +260,22 @@ updated_model <- lm(price ~ host_is_superhost + host_response_time +
 # Summary of the updated model
 summary(updated_model)
 
+# Perform stepwise selection on the updated model
 step_model3 <- step(updated_model)
 
 # Summary of the model with stepwise selection
 summary(step_model3)
+
 ```
 
+This model has the outliers removed and only significant neighbourhoods
 
 ```{r air_clean_sig2 step_model4}
 # Filter the dataset to include only significant neighbourhoods with filtered data
-air_clean_sig2 <- subset(air_clean_filtered, 
-                                   neighbourhood_cleansed %in% significant_neighborhoods)
+air_clean_sig2 <- air_clean_filtered %>%
+  filter(neighbourhood_cleansed %in% significant_neighborhoods)
 
-# Fit the linear regression model with significant neighbourhoods
+# Fit a linear regression model with significant neighbourhoods and filtered data
 lm_model_significant_neighborhoods2 <- lm(price ~ host_is_superhost + host_response_time + 
                       host_response_rate + host_acceptance_rate + 
                       accommodates + bathrooms + bedrooms + 
@@ -286,37 +286,17 @@ lm_model_significant_neighborhoods2 <- lm(price ~ host_is_superhost + host_respo
                       review_scores_rating + reviews_per_month, 
                                        data = air_clean_sig2)
 
-# Get the summary of the model with significant neighbourhoods
+# Get the summary of the model with significant neighbourhoods and filtered data
 summary(lm_model_significant_neighborhoods2)
 
+# Perform stepwise selection on the model
 step_model4 <- step(lm_model_significant_neighborhoods2)
 
 # Summary of the model with stepwise selection
 summary(step_model4)
-```
 
 
 
-```{r step_model5}
-log_model <- glm(price ~ ., data = air_clean)
-summary(log_model)
-
-step_model5 <- step(log_model)
-
-# Summary of the model with stepwise selection
-summary(step_model5)
-
-```
-
-
-```{r step_model6}
-log_model2 <- glm(price ~ ., data = air_clean_sig2)
-summary(log_model2)
-
-step_model6 <- step(log_model2)
-
-# Summary of the model with stepwise selection
-summary(step_model6)
 ```
 
 ```{r simple histograms and current statistics air_clean_sig2, fig.height=6, fig.width=10}
@@ -333,6 +313,99 @@ p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$numb
 print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
+This is the logistic model with the same data as model 1 OLS
+
+```{r log_model logstep_model1}
+# Fit a logistic regression model using all variables
+log_model <- glm(price ~ ., data = air_clean)
+summary(log_model)
+
+# Perform stepwise selection on logistic regression model
+logstep_model1 <- step(log_model)
+
+# Summary of the logistic regression model with stepwise selection
+summary(logstep_model1)
+
+```
+
+Logistic model with the same data as the model 4
+
+```{r log_model2 logstep_model2}
+library(stargazer)
+# Fit a logistic regression model using filtered data and significant neighbourhoods
+log_model2 <- glm(price ~ ., data = air_clean_filtered)
+summary(log_model2)
+
+# Perform stepwise selection on the logistic regression model
+logstep_model2 <- step(log_model2)
+
+# Summary of the logistic regression model with stepwise selection
+summary(logstep_model2)
+
+
+# Create a list of your models
+logmodels_list <- list(logstep_model1, logstep_model2)
+
+stargazer(logmodels_list, type = "text", title = "Model Comparison",
+          column.labels = c("Log Model 1", "Log Model 2"),
+          header = FALSE, single.row = TRUE, font.size = "small")
+```
+
+Comparing of Models
+
+```{r}
+# Load the stargazer package
+library(stargazer)
+
+# Create a list of your models
+models_list <- list(step_model, step_model2, step_model3)
+
+# Display the comparison using stargazer with smaller output
+stargazer(models_list, type = "text", title = "Model Comparison",
+          column.labels = c("Model 1", "Model 2", "Model 3"),
+          header = FALSE, single.row = TRUE, font.size = "small")
+
+
+
+options(scipen = 999)
+
+
+# Diagnostic plot: Residuals vs Fitted
+residuals_vs_fitted <- ggplot(air_clean_filtered, aes(x = fitted(step_model3), y = residuals(step_model3))) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted Values") +
+  ylab("Residuals") +
+  ggtitle("Residuals vs Fitted Model 3")
+
+# Show the plot
+print(residuals_vs_fitted)
+
+# Get the residuals from the model
+residuals <- residuals(step_model3)
+
+# Create a histogram of the residuals
+hist(residuals, breaks = 30, main = "Histogram of Residuals OLS Model 3", xlab = "Residuals")
+
+# Diagnostic plot: Residuals vs Fitted
+residuals_vs_fitted2 <- ggplot(air_clean, aes(x = fitted(step_model), y = residuals(step_model))) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted Values") +
+  ylab("Residuals") +
+  ggtitle("Residuals vs Fitted Model 1")
+
+# Show the plot
+print(residuals_vs_fitted2)
+
+
+# Get the residuals from the model
+residuals2 <- residuals(step_model)
+# Create a histogram of the residuals
+hist(residuals2, breaks = 30, main = "Histogram of Residuals OLS Model 1", xlab = "Residuals")
+
+
+```
 
 ```{r}
 library(rpart)
@@ -340,58 +413,169 @@ library(caret)
 library(rpart.plot)
 library(e1071)
 
+# Calculate the median price
+median_price <- median(air_clean_filtered$price)
+
+# Create a binary variable based on median price
+air_clean_filtered$price_binary <- ifelse(air_clean_filtered$price > median_price, "Above Median", "Below Median")
+
+# Convert character columns to factors in the dataset
+air_clean_filtered <- air_clean_filtered %>% mutate_if(is.character, as.factor)
+
 # Set the seed for reproducibility
 set.seed(123)
 
 # Randomize the order of the data
-air_clean_sig2 <- air_clean_sig2[sample(nrow(air_clean_sig2)), ]
+air_clean_filtered <- air_clean_filtered[sample(nrow(air_clean_filtered)), ]
 
 # Split the data into training (70%) and testing (30%) sets
-train_index <- createDataPartition(air_clean_sig2$price, p = 0.7, list = FALSE)
-train_data <- air_clean_sig2[train_index, ]
-test_data <- air_clean_sig2[-train_index, ]
+train_index <- createDataPartition(air_clean_filtered$price, p = 0.7, list = FALSE)
+train_data <- air_clean_filtered[train_index, ]
+test_data <- air_clean_filtered[-train_index, ]
 
 # Fit the decision tree model using the training data
-tree_model <- rpart(price ~ host_is_superhost + accommodates + bathrooms + 
-                     bedrooms + neighbourhood_cleansed + minimum_nights + 
-                     host_identity_verified + availability_30 + review_scores_rating + 
-                     reviews_per_month, data = train_data)
+tree_model <- rpart(price_binary ~  host_is_superhost + host_response_time + 
+                      host_response_rate + host_acceptance_rate + 
+                      accommodates + bathrooms + bedrooms + 
+                      neighbourhood_cleansed + host_listings_count + 
+                      minimum_nights + maximum_nights + instant_bookable + 
+                      host_identity_verified + availability_30 + 
+                      availability_60 + availability_90 + 
+                      review_scores_rating + reviews_per_month , data = train_data)
 
 # Visualize the decision tree
 rpart.plot(tree_model)
 
-# Make predictions on the test data
-predicted_prices <- predict(tree_model, test_data)
+# Convert character columns to factors in the dataset
+air_clean_filtered <- air_clean_filtered %>% mutate_if(is.character, as.factor)
 
-# Calculate the Mean Absolute Error (MAE)
-mae <- mean(abs(predicted_prices - test_data$price))
 
-# Print the MAE
-print(paste("Mean Absolute Error (MAE):", mae))
+
+# Get the variable importance from the model
+variable_importance <- tree_model$variable.importance
+
+# Calculate the total importance sum
+total_importance <- sum(variable_importance)
+
+# Calculate the percentage importance for each variable
+percentage_importance <- (variable_importance / total_importance) * 100
+
+# Sort variable importance in descending order
+sorted_percentage <- sort(percentage_importance, decreasing = TRUE)
+
+# Print sorted percentage importance
+print(sorted_percentage)
+```
+
+```{r}
+# Create a subset of the dataset with the selected input variables and the target variable of binary price
+
+data_subset <- air_clean_filtered %>%
+  select(c(selected_variables, "price_binary"))
+
+# Set up the training control for 10-fold cross-validation
+train_control <- trainControl(method = "cv", number = 10)
+
+# Define the grid of k values to test
+k_values <- data.frame(k = c(1, 3, 5, 7, 9, 11,13))  # Adjust as needed
+
+# Fit the KNN model with different k values and perform 10-fold cross-validation
+knn_model <- train(price_binary ~ ., data = data_subset, method = "knn", trControl = train_control, tuneGrid = k_values)
+
+# Plot model accuracy vs. Number of Neighbors (K)
+plot(knn_model, main = "Model Accuracy vs. Number of Neighbors (K)", xlab = "Number of Neighbors (K)", ylab = "Accuracy")
+
+
+# Train KNN model using caret and evaluate performance
+knn_model <- train( price_binary~ ., data = train_data, method = "knn", trControl = train_control)
+knn_predictions <- predict(knn_model, test_data)
+
+ 
+
+# Compute the confusion matrix
+knn_metrics <- confusionMatrix(knn_predictions, test_data$price_binary)
+print(knn_metrics)
+
+
+# Calculate precision and recall for the KNN model
+knn_precision <- knn_metrics$byClass["Precision"]
+knn_recall <- knn_metrics$byClass["Recall"]
+
+print("KNN Metrics:")
+print(paste("Accuracy:", knn_metrics$overall["Accuracy"]))
+print(paste("Precision:", knn_precision))
+print(paste("Recall:", knn_recall))
+```
+
+```{r}
+# Create a new data frame for the specific Airbnb listing
+new_listing <- data.frame(
+  host_is_superhost = "f",  # Assuming the host is not a superhost
+  host_response_time = "within a day",  # Assuming response time within a day
+  host_response_rate = 0.95,  # Assuming a 95% response rate
+  host_acceptance_rate = 0.97,  # Assuming an 85% acceptance rate
+  accommodates = 4,  # Number of people accommodated
+  bathrooms = 1,  # Number of bathrooms
+  bedrooms = 2,  # Number of bedrooms
+  neighbourhood_cleansed = "Kitsilano",  # Neighborhood name
+  host_listings_count = 3,  # Number of host listings
+  minimum_nights = 2,  # Minimum nights required for booking
+  maximum_nights = 30,  # Maximum nights allowed for booking
+  instant_bookable = "f",  # Assuming instant booking is not available
+  host_identity_verified = "t",  # Assuming host identity is verified
+  availability_30 = 25,  # Availability in the next 30 days
+  availability_60 = 50,  # Availability in the next 60 days
+  availability_90 = 70,  # Availability in the next 90 days
+  review_scores_rating = 4.5,  # Review scores rating
+  reviews_per_month = 2,  # Reviews per month
+  has_availability = "t",  # Assuming availability is true
+  availability_365 = 300,  # Availability in the next 365 days
+  number_of_reviews = 50   # Total number of reviews
+  
+)
+
+# Predict prices using all models and print them
+print("Predicted Price from Model 1:")
+print(predict(step_model, newdata = new_listing))
+
+print("Predicted Price from Model 2:")
+print(predict(step_model2, newdata = new_listing))
+
+print("Predicted Price from Model 3:")
+print(predict(step_model3, newdata = new_listing))
+
+print("Predicted Price from Model 5:")
+print(predict(logstep_model1, newdata = new_listing))
+
+print("Predicted Price from Model 6:")
+print(predict(logstep_model2, newdata = new_listing))
+
 
 
 ```
 
-```{r testing}
+Distribution of price in different datasets
 
-#shuffle the data - randomize rows to prep for splitting into test and train parts
-shuffle_air <- sample(1:nrow(air_new)) # generates random row #s in a vector
-air_new_shuffled <- air_new[shuffle_air, ] # use the randomly generated rows to shuffle dt
+```{r}
+# Load the ggplot2 library
+library(ggplot2)
 
-#create test and train data
-n_cut <- round(nrow(air_new)*.8,0) 
-air_train <- air_new[1:n_cut,]
-air_test <- air_new[(n_cut+1):nrow(air_new),]
-
-```
-
-```{r predict}
-#Prediction Model
-#Model 1
-fit <- rpart(y~housing+loan+balance+default+education+age+poutcome+pdays, data = bank_train, method = 'class') 
-
-#plotting the trees
-rpart.plot(fit, type = 4, extra=106) # tree plotting`
+# Create a histogram of the price distribution
+ggplot(air_clean, aes(x = price)) +
+  geom_histogram(binwidth = 25, color = "black", fill = "skyblue", alpha = 0.8) +
+  labs(title = "Distribution of Price Model 1", x = "Price", y = "Frequency") +
+  theme_minimal()
 
 
+# Create a histogram of the price distribution
+ggplot(air_clean_sig, aes(x = price)) +
+  geom_histogram(binwidth = 25, color = "black", fill = "skyblue", alpha = 0.8) +
+  labs(title = "Distribution of Price Model 2", x = "Price", y = "Frequency") +
+  theme_minimal()
+
+# Create a histogram of the price distribution
+ggplot(air_clean_filtered, aes(x = price)) +
+  geom_histogram(binwidth = 25, color = "black", fill = "skyblue", alpha = 0.8) +
+  labs(title = "Distribution of Price Model 3", x = "Price", y = "Frequency") +
+  theme_minimal()
 ```

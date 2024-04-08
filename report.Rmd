@@ -110,7 +110,9 @@ print(correlation_df)
 
 ```
 
-```{r correlation graph, fig.height=6, fig.width=10}
+```{r correlation graph, fig.height=10, fig.width=10}
+#extra code taken from http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization
+
 #built in heatmap
 heatmap(correlation_matrix, Colv = NA, Rowv = NA, scale = "none")
 
@@ -129,8 +131,35 @@ melted_cor <- melt(correlation_matrix)
 ggplot(data = melted_cor, aes(x=Var1, y=Var2, fill=value)) + 
   geom_raster()
 
+# Melt the correlation matrix
 
+melted_cor <- melt(lower_tri_cor(correlation_matrix), na.rm = TRUE)
 
+# Heatmap
+ggplot(data = melted_cor, aes(Var2, Var1, fill = value))+
+ geom_tile(color = "white")+
+ scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+   midpoint = 0, limit = c(-1,1), space = "Lab", 
+   name="Correlation") +
+  theme_minimal()+ 
+ theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+    size = 12, hjust = 1))+
+ coord_fixed()
+
+#reorder correlation table
+reorder_cormat <- function(cormat){
+  # Use correlation between variables as distance
+  dd <- as.dist((1-cormat)/2)
+  hc <- hclust(dd)
+  cormat <-cormat[hc$order, hc$order]
+}
+
+#following code manipulated from https://www.datanovia.com/en/blog/easy-correlation-matrix-analysis-in-r-using-corrr-package/
+install.packages("corrr")
+require(corrr)
+
+cor <- correlate(air_clean, method = "spearman", diagonal = 1)
+cor %>% rearrange() %>% shave() %>% rplot(shape = 15, colours = c("red","blue"))
 ```
 
 ```{r air_clean, step_model}

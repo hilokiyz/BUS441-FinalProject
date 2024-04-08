@@ -86,8 +86,6 @@ print(p + labs(title = "Price compared to the number of reviews", y = "Price", x
 correlation_matrix <- model.matrix(~0 + ., air_clean) %>%
   cor(use = "pairwise.complete.obs")
 
-print(correlation_matrix)
-
 # Identify correlations with the "y" variable (price)
 review_correlations <- correlation_matrix["price",]
 

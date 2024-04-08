@@ -328,6 +328,21 @@ summary(logstep_model1)
 
 ```
 
+```{r simple histograms and current statistics log_model, fig.height=6, fig.width=10}
+p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$accommodates)) + geom_point() + facet_wrap(~log_model$model$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+
+p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$accommodates)) + geom_point() + facet_wrap(~log_model$model$bathrooms) + geom_boxplot(aes(group = log_model$model$accommodates))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+
+p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$bathrooms)) + geom_boxplot(aes(group = log_model$model$bathrooms))
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+
+p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+```
+
+
 Logistic model with the same data as the model 4
 
 ```{r log_model2 logstep_model2}
@@ -349,6 +364,20 @@ logmodels_list <- list(logstep_model1, logstep_model2)
 stargazer(logmodels_list, type = "text", title = "Model Comparison",
           column.labels = c("Log Model 1", "Log Model 2"),
           header = FALSE, single.row = TRUE, font.size = "small")
+```
+
+```{r simple histograms and current statistics log_model2, fig.height=6, fig.width=10}
+p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$accommodates)) + geom_point() + facet_wrap(~log_model2$model$bedrooms)
+print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+
+p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$accommodates)) + geom_point() + facet_wrap(~log_model2$model$bathrooms) + geom_boxplot(aes(group = log_model2$model$accommodates))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+
+p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$bathrooms)) + geom_boxplot(aes(group = log_model2$model$bathrooms)) + geom_smooth()
+print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+
+p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$number_of_reviews)) + geom_point()
+print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
 ```
 
 Comparing of Models

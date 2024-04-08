@@ -231,10 +231,11 @@ air_clean_filtered <- remove_outliers(air_clean, 'price')
 p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bedrooms)
 print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
 
-p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bathrooms) + geom_boxplot(aes(group = air_clean_filtered$accommodates))
+p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bathrooms) 
+#+ geom_boxplot(aes(group = air_clean_filtered$accommodates))
 print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
 
-p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$bathrooms)) + geom_boxplot(aes(group = air_clean_filtered$bathrooms))
+p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$bathrooms)) + geom_boxplot(aes(group = air_clean_filtered$bathrooms)) + geom_smooth()
 print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
 
 p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$number_of_reviews)) + geom_point()

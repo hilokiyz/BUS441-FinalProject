@@ -69,16 +69,16 @@ bathrooms_count <- table(air_clean$bathrooms)
 library(ggplot2)
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bedrooms (Model 1)", y = "Price", x = "Accommodates"))
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bathrooms)
-print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bathrooms (Model 1)", y = "Price", x = "Accommodates"))
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$bathrooms)) + geom_point()
-print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+print(p + labs(title = "Price compared to bathrooms (Model 1)", y = "Price", x = "Bathrooms"))
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+print(p + labs(title = "Price compared to the number of reviews (Model 1)", y = "Price", x = "Number of reviews"))
 ```
 
 ```{r correlations}
@@ -152,16 +152,16 @@ summary(step_model)
 
 ```{r simple histograms and current statistics air_clean, fig.height=6, fig.width=10}
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bedrooms (Model 2)", y = "Price", x = "Accommodates"))
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$accommodates)) + geom_point() + facet_wrap(~air_clean$bathrooms) + geom_boxplot(aes(group = air_clean$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+print(p + labs(title = "Price compared to accommodation size split by bathrooms (Model 2)", y = "Price", x = "Accommodates")) 
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$bathrooms)) + geom_boxplot(aes(group = air_clean$bathrooms))
-print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+print(p + labs(title = "Price compared to bathrooms (Model 2)", y = "Price", x = "Bathrooms"))
 
 p = ggplot(air_clean, aes(y = air_clean$price, x = air_clean$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+print(p + labs(title = "Price compared to the number of reviews (Model 2)", y = "Price", x = "Number of reviews"))
 ```
 
 In this chunk of code I got rid of non-signficant neighbourhoods.
@@ -229,17 +229,17 @@ air_clean_filtered <- remove_outliers(air_clean, 'price')
 
 ```{r simple histograms and current statistics air_clean_filtered, fig.height=6, fig.width=10}
 p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bedrooms (Model 3)", y = "Price", x = "Accommodates"))
 
 p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$accommodates)) + geom_point() + facet_wrap(~air_clean_filtered$bathrooms) 
 #+ geom_boxplot(aes(group = air_clean_filtered$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+print(p + labs(title = "Price compared to accommodation size split by bathrooms (Model 3)", y = "Price", x = "Accommodates")) 
 
 p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$bathrooms)) + geom_boxplot(aes(group = air_clean_filtered$bathrooms)) + geom_smooth()
-print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+print(p + labs(title = "Price compared to bathrooms (Model 3)", y = "Price", x = "Bathrooms"))
 
 p = ggplot(air_clean_filtered, aes(y = air_clean_filtered$price, x = air_clean_filtered$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+print(p + labs(title = "Price compared to the number of reviews (Model 3)", y = "Price", x = "Number of reviews"))
 ```
 
 This model has the data without outliers and with all neighbourhoods.
@@ -300,16 +300,16 @@ summary(step_model4)
 
 ```{r simple histograms and current statistics air_clean_sig2, fig.height=6, fig.width=10}
 p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$accommodates)) + geom_point() + facet_wrap(~air_clean_sig2$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bedrooms (Model 4)", y = "Price", x = "Accommodates"))
 
 p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$accommodates)) + geom_point() + facet_wrap(~air_clean_sig2$bathrooms) + geom_boxplot(aes(group = air_clean_sig2$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+print(p + labs(title = "Price compared to accommodation size split by bathrooms (Model 4)", y = "Price", x = "Accommodates")) 
 
 p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$bathrooms)) + geom_boxplot(aes(group = air_clean_sig2$bathrooms)) + geom_smooth()
-print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+print(p + labs(title = "Price compared to bathrooms (Model 4)", y = "Price", x = "Bathrooms"))
 
 p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+print(p + labs(title = "Price compared to the number of reviews (Model 4)", y = "Price", x = "Number of reviews"))
 ```
 
 This is the logistic model with the same data as model 1 OLS
@@ -329,16 +329,16 @@ summary(logstep_model1)
 
 ```{r simple histograms and current statistics log_model, fig.height=6, fig.width=10}
 p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$accommodates)) + geom_point() + facet_wrap(~log_model$model$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bedrooms (Log Model 1)", y = "Price", x = "Accommodates"))
 
 p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$accommodates)) + geom_point() + facet_wrap(~log_model$model$bathrooms) + geom_boxplot(aes(group = log_model$model$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+print(p + labs(title = "Price compared to accommodation size split by bathrooms (Log Model 1)", y = "Price", x = "Accommodates")) 
 
 p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$bathrooms)) + geom_boxplot(aes(group = log_model$model$bathrooms))
-print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+print(p + labs(title = "Price compared to bathrooms (Log Model 1)", y = "Price", x = "Bathrooms"))
 
 p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+print(p + labs(title = "Price compared to the number of reviews (Log Model 1)", y = "Price", x = "Number of reviews"))
 ```
 
 
@@ -367,16 +367,16 @@ stargazer(logmodels_list, type = "text", title = "Model Comparison",
 
 ```{r simple histograms and current statistics log_model2, fig.height=6, fig.width=10}
 p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$accommodates)) + geom_point() + facet_wrap(~log_model2$model$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms", y = "Price", x = "Accommodates"))
+print(p + labs(title = "Price compared to accommodation size split by bedrooms (Log Model 2)", y = "Price", x = "Accommodates"))
 
 p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$accommodates)) + geom_point() + facet_wrap(~log_model2$model$bathrooms) + geom_boxplot(aes(group = log_model2$model$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms", y = "Price", x = "Accommodates")) 
+print(p + labs(title = "Price compared to accommodation size split by bathrooms (Log Model 2)", y = "Price", x = "Accommodates")) 
 
 p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$bathrooms)) + geom_boxplot(aes(group = log_model2$model$bathrooms)) + geom_smooth()
-print(p + labs(title = "Price compared to bathrooms", y = "Price", x = "Bathrooms"))
+print(p + labs(title = "Price compared to bathrooms (Log Model 2)", y = "Price", x = "Bathrooms"))
 
 p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews", y = "Price", x = "Number of reviews"))
+print(p + labs(title = "Price compared to the number of reviews (Log Model 2)", y = "Price", x = "Number of reviews"))
 ```
 
 Comparing of Models

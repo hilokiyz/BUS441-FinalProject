@@ -312,73 +312,6 @@ p = ggplot(air_clean_sig2, aes(y = air_clean_sig2$price, x = air_clean_sig2$numb
 print(p + labs(title = "Price compared to the number of reviews (Model 4)", y = "Price", x = "Number of reviews"))
 ```
 
-This is the logistic model with the same data as model 1 OLS
-
-```{r log_model logstep_model1}
-# Fit a logistic regression model using all variables
-log_model <- glm(price ~ ., data = air_clean)
-summary(log_model)
-
-# Perform stepwise selection on logistic regression model
-logstep_model1 <- step(log_model)
-
-# Summary of the logistic regression model with stepwise selection
-summary(logstep_model1)
-
-```
-
-```{r simple histograms and current statistics log_model, fig.height=6, fig.width=10}
-p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$accommodates)) + geom_point() + facet_wrap(~log_model$model$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms (Log Model 1)", y = "Price", x = "Accommodates"))
-
-p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$accommodates)) + geom_point() + facet_wrap(~log_model$model$bathrooms) + geom_boxplot(aes(group = log_model$model$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms (Log Model 1)", y = "Price", x = "Accommodates")) 
-
-p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$bathrooms)) + geom_boxplot(aes(group = log_model$model$bathrooms))
-print(p + labs(title = "Price compared to bathrooms (Log Model 1)", y = "Price", x = "Bathrooms"))
-
-p = ggplot(log_model, aes(y = log_model$model$price, x = log_model$model$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews (Log Model 1)", y = "Price", x = "Number of reviews"))
-```
-
-
-Logistic model with the same data as the model 4
-
-```{r log_model2 logstep_model2}
-library(stargazer)
-# Fit a logistic regression model using filtered data and significant neighbourhoods
-log_model2 <- glm(price ~ ., data = air_clean_filtered)
-summary(log_model2)
-
-# Perform stepwise selection on the logistic regression model
-logstep_model2 <- step(log_model2)
-
-# Summary of the logistic regression model with stepwise selection
-summary(logstep_model2)
-
-
-# Create a list of your models
-logmodels_list <- list(logstep_model1, logstep_model2)
-
-stargazer(logmodels_list, type = "text", title = "Model Comparison",
-          column.labels = c("Log Model 1", "Log Model 2"),
-          header = FALSE, single.row = TRUE, font.size = "small")
-```
-
-```{r simple histograms and current statistics log_model2, fig.height=6, fig.width=10}
-p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$accommodates)) + geom_point() + facet_wrap(~log_model2$model$bedrooms)
-print(p + labs(title = "Price compared to accommodation size split by bedrooms (Log Model 2)", y = "Price", x = "Accommodates"))
-
-p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$accommodates)) + geom_point() + facet_wrap(~log_model2$model$bathrooms) + geom_boxplot(aes(group = log_model2$model$accommodates))
-print(p + labs(title = "Price compared to accommodation size split by bathrooms (Log Model 2)", y = "Price", x = "Accommodates")) 
-
-p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$bathrooms)) + geom_boxplot(aes(group = log_model2$model$bathrooms)) + geom_smooth()
-print(p + labs(title = "Price compared to bathrooms (Log Model 2)", y = "Price", x = "Bathrooms"))
-
-p = ggplot(log_model2, aes(y = log_model2$model$price, x = log_model2$model$number_of_reviews)) + geom_point()
-print(p + labs(title = "Price compared to the number of reviews (Log Model 2)", y = "Price", x = "Number of reviews"))
-```
-
 Comparing of Models
 
 ```{r}
@@ -572,11 +505,6 @@ print(predict(step_model2, newdata = new_listing))
 print("Predicted Price from Model 3:")
 print(predict(step_model3, newdata = new_listing))
 
-print("Predicted Price from Model 5:")
-print(predict(logstep_model1, newdata = new_listing))
-
-print("Predicted Price from Model 6:")
-print(predict(logstep_model2, newdata = new_listing))
 
 
 
